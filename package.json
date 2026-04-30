@@ -1,0 +1,30 @@
+{
+  "name": "mcp-control-plane",
+  "version": "0.1.0",
+  "description": "Config-driven local control plane for reliable MCP startup, process cleanup, and shared HTTP MCP daemons.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moorej2400/mcp-control-plane.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moorej2400/mcp-control-plane/issues"
+  },
+  "homepage": "https://github.com/moorej2400/mcp-control-plane#readme",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "codex",
+    "automation"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "mcpctl": "./bin/mcpctl.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

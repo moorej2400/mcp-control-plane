@@ -1,0 +1,35 @@
+{
+  "services": [
+    {
+      "name": "browser_tools",
+      "transport": "stdio",
+      "command": ["npx", "-y", "chrome-devtools-mcp@0.23.0"],
+      "cleanupPatterns": ["chrome-devtools-mcp"]
+    },
+    {
+      "name": "local_planner",
+      "transport": "streamable-http",
+      "cwd": "/path/to/local-planner-mcp",
+      "command": ["npm", "run", "start:mcp:http"],
+      "env": {
+        "MCP_TRANSPORT": "http",
+        "PORT": "49101"
+      },
+      "url": "http://127.0.0.1:49101/mcp",
+      "cleanupPatterns": ["local-planner-mcp"]
+    },
+    {
+      "name": "remote_docs",
+      "transport": "streamable-http",
+      "url": "https://example.com/mcp",
+      "inheritEnv": ["REMOTE_DOCS_TOKEN"]
+    },
+    {
+      "name": "legacy_stdio_proxy",
+      "transport": "stdio-proxy",
+      "command": ["npx", "-y", "some-stdio-mcp@latest"],
+      "url": "http://127.0.0.1:49102/mcp",
+      "cleanupPatterns": ["some-stdio-mcp"]
+    }
+  ]
+}

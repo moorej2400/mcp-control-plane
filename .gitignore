@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+.cloud/
+.codex/
+.mcp-control-plane/
+mcp-control-plane.config.json
+services.json
+*.bak
