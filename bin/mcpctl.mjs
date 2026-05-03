@@ -7,6 +7,7 @@ import { writeLaunchAgents } from "../src/launchagents.mjs";
 import {
   formatTable,
   healthReport,
+  managedRootPids,
   serviceStatus,
   startServices,
   stopServices,
@@ -57,6 +58,7 @@ try {
         activeCpuSeconds: numberArg(args, "--active-cpu-seconds", 0.2),
         apply,
         cleanupPatterns: context.cleanupPatterns,
+        currentRootPids: new Set(await managedRootPids(context.specs)),
         minimumAgeSeconds,
         sampleMs: numberArg(args, "--sample-ms", 1500),
         termGraceMs: numberArg(args, "--term-grace-ms", 3000),

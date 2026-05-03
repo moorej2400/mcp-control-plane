@@ -4,6 +4,7 @@ export async function cleanup({
   activeCpuSeconds = 0.2,
   apply = false,
   cleanupPatterns = [],
+  currentRootPids = new Set(),
   getRows = getProcessRows,
   kill = process.kill,
   minimumAgeSeconds = 600,
@@ -13,7 +14,7 @@ export async function cleanup({
 } = {}) {
   const readRows = () => getRows({ cleanupPatterns });
   const rows = await readRows();
-  const candidates = findCleanupCandidates(rows, { minimumAgeSeconds });
+  const candidates = findCleanupCandidates(rows, { currentRootPids, minimumAgeSeconds });
 
   if (!apply) return { candidates, killed: [], skipped: [], summary: summarize(candidates) };
 

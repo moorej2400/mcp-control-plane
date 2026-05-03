@@ -78,7 +78,35 @@ export function findCleanupCandidates(
     }
   }
 
+  for (const row of rows) {
+    if (row.ppid !== 1 || row.pgid !== row.pid) continue;
+    if (currentRootPids.has(row.pid)) continue;
+    // Orphaned wrappers often have a generic `mcpctl connect` command;
+    // classify them by the MCP child they still own.
+    const type = orphanedProcessGroupType(row, rows);
+    if (!type) continue;
+    if (row.ageSeconds < minimumAgeSeconds) continue;
+    const rssKb = rows
+      .filter((candidate) => candidate.pgid === row.pgid)
+      .reduce((total, candidate) => total + candidate.rssKb, 0);
+    candidates.push({
+      pid: row.pid,
+      pgid: row.pgid,
+      reason: `orphaned ${type} process group`,
+      rssKb,
+      type,
+    });
+  }
+
   return candidates.toSorted((a, b) => a.pid - b.pid);
+}
+
+function orphanedProcessGroupType(root, rows) {
+  if (root.type) return root.type;
+  const childTypes = rows
+    .filter((row) => row.pgid === root.pgid && row.type)
+    .map((row) => row.type);
+  return childTypes[0] ?? null;
 }
 
 function findAiRoots(rows) {

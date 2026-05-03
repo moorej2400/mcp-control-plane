@@ -96,8 +96,9 @@ node bin/mcpctl.mjs launchagents --write
 
 - Secrets and machine-specific paths belong in `~/.mcp-control-plane/services.json`, environment variables, or your Codex config, not in git.
 - Cleanup is a dry run unless `--apply` is passed.
-- The cleaner only considers configured `cleanupPatterns`.
+- The cleaner only considers configured `cleanupPatterns`, including old orphaned process groups left behind by closed AI sessions.
 - Stdio-only MCP servers are not shared by default because many are single-client by design.
+- State files are lock-protected and atomically rewritten so concurrent MCP startup cannot expose partial JSON.
 
 ## Development
 

@@ -142,8 +142,11 @@ Cleanup is intentionally conservative:
 
 - it only considers processes matched by configured `cleanupPatterns`
 - it keeps the newest duplicate process group
+- it can flag orphaned configured MCP process groups whose original AI client already exited
 - it samples CPU before applying
 - dry run is the default
+
+Codex may start all configured MCP clients at the same time. Control-plane state is protected by a local lock and rewritten through an atomic rename so concurrent wrappers do not read partially written JSON.
 
 Run:
 

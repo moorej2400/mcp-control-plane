@@ -19,6 +19,12 @@ const samplePs = `
 50841 50554 50554       02:05 S  105000 chrome-devtools-mcp
 `;
 
+const orphanPs = `
+  PID  PPID  PGID     ELAPSED STAT   RSS COMMAND
+69427 1 69427     01-05:23:41 S   36112 node /Users/example/mcp-control-plane/bin/mcpctl.mjs connect chrome-devtools
+69531 69427 69427 01-05:23:40 S   49024 npm exec chrome-devtools-mcp@0.23.0 --autoConnect
+`;
+
 const cleanupPatterns = [
   { name: "chrome-devtools", pattern: /chrome-devtools-mcp/ },
   { name: "notionApi", pattern: /notion-mcp-server|@notionhq\/notion-mcp-server/ },
@@ -50,6 +56,30 @@ test("findCleanupCandidates keeps newest duplicate and current root", () => {
     [23049]
   );
   assert.equal(candidates[0].reason, "older duplicate chrome-devtools under root 21566");
+});
+
+test("findCleanupCandidates includes orphaned configured MCP roots", () => {
+  const rows = parsePsRows(`${samplePs}\n${orphanPs}`, { cleanupPatterns });
+  const candidates = findCleanupCandidates(rows, {
+    currentRootPids: new Set([50377]),
+    minimumAgeSeconds: 600,
+  });
+
+  assert.deepEqual(
+    candidates.map((candidate) => candidate.pid),
+    [23049, 69427]
+  );
+  assert.equal(candidates[1].reason, "orphaned chrome-devtools process group");
+});
+
+test("findCleanupCandidates skips protected orphaned roots", () => {
+  const rows = parsePsRows(orphanPs, { cleanupPatterns });
+  const candidates = findCleanupCandidates(rows, {
+    currentRootPids: new Set([69427]),
+    minimumAgeSeconds: 600,
+  });
+
+  assert.deepEqual(candidates, []);
 });
 
 test("parsePsRows captures CPU fields when present", () => {

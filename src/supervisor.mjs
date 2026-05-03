@@ -3,6 +3,7 @@ import { closeSync, openSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { withDirectoryLock } from "./locks.mjs";
 import { CONTROL_HOME } from "./services.mjs";
 
 export async function serviceStatus(specs, { controlHome = CONTROL_HOME } = {}) {
@@ -50,7 +51,7 @@ export async function startService(spec, { controlHome = CONTROL_HOME, quiet = f
   await mkdir(path.join(controlHome, "logs"), { recursive: true, mode: 0o700 });
   await mkdir(path.join(controlHome, "pids"), { recursive: true, mode: 0o700 });
 
-  return withServiceLock(spec.name, controlHome, async () => {
+  return withDirectoryLock(spec.name, controlHome, async () => {
     const existingPid = await readPid(spec.name, controlHome);
     if (existingPid && isProcessAlive(existingPid)) {
       return { action: "skip", name: spec.name, pid: existingPid };
@@ -113,6 +114,16 @@ export async function healthReport(specs) {
     }
   }
   return results;
+}
+
+export async function managedRootPids(specs, { controlHome = CONTROL_HOME } = {}) {
+  const pids = [];
+  for (const spec of Object.values(specs)) {
+    if (spec.managed === false) continue;
+    const pid = await readPid(spec.name, controlHome);
+    if (pid && isProcessAlive(pid)) pids.push(pid);
+  }
+  return pids;
 }
 
 export async function checkHealth(spec, { fetchFn = fetch } = {}) {
@@ -192,32 +203,4 @@ function isProcessAlive(pid) {
   } catch {
     return false;
   }
-}
-
-async function withServiceLock(name, controlHome, callback) {
-  const locksDir = path.join(controlHome, "locks");
-  const lockPath = path.join(locksDir, `${name}.lock`);
-  await mkdir(locksDir, { recursive: true, mode: 0o700 });
-
-  const deadline = Date.now() + 30_000;
-  while (true) {
-    try {
-      await mkdir(lockPath, { mode: 0o700 });
-      break;
-    } catch (error) {
-      if (error.code !== "EEXIST") throw error;
-      if (Date.now() > deadline) throw new Error(`timed out waiting for ${name} start lock`);
-      await delay(100);
-    }
-  }
-
-  try {
-    return await callback();
-  } finally {
-    await rm(lockPath, { recursive: true, force: true });
-  }
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
